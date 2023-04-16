@@ -81,14 +81,7 @@ class PostFormCreateEditTests(TestCase):
 
         post_count_after = Post.objects.count()
 
-        # post = Post.objects.select_related('group', 'author').get()
-        # post = Post.objects.get(image=f'{IMG_FOLDER}/{IMG_NAME}',)
         post = Post.objects.get(text=post_content['text'],)
-        # post = Post.objects.get(
-        #                         text=post_content['text'],
-        #                         image=f'{IMG_FOLDER}/{IMG_NAME}',
-        #                         group=self.group,
-        #                        )
         self.assertEqual(post_content['text'], post.text)
         self.assertEqual(post_content['group'], post.group.pk)
         self.assertEqual(post.image, IMG_FOLDER + IMG_NAME)
