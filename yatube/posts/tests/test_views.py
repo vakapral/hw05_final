@@ -290,9 +290,9 @@ class PostPagesTests(TestCase):
         followers_number_after = Follow.objects.count()
 
         self.assertEqual(
-                        followers_number_before + 1, 
-                        followers_number_after
-                        )
+            followers_number_before + 1,
+            followers_number_after
+        )
 
     def test_profile_stop_follow_authorized(self):
         """Авторизованный пользователь может отписаться от автора"""

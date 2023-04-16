@@ -14,6 +14,7 @@ def paginator(post_list, posts_on_page, request):
     page_number = request.GET.get('page')
     return paginator.get_page(page_number)
 
+
 @cache_page(20, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.all().order_by('-pub_date')
@@ -129,12 +130,12 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
 
-    return redirect('posts:post_detail', post_id=post_id) 
+    return redirect('posts:post_detail', post_id=post_id)
 
 
 @login_required
 def follow_index(request):
-    """Подписки пользователя"""    
+    """Подписки пользователя"""
     post_list = Post.objects.select_related(
         'author',
         'group',
