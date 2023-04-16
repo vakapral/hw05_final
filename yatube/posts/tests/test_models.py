@@ -5,6 +5,7 @@ from ..models import Group, Post, User, POST_STR_DESC
 
 
 class PostModelTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

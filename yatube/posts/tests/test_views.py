@@ -28,6 +28,7 @@ TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTests(TestCase):
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -55,7 +56,6 @@ class PostPagesTests(TestCase):
             image=SimpleUploadedFile(
                 name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
             ),
-            # group=cls.group,
         )
 
         for x in range(42):
@@ -222,7 +222,6 @@ class PostPagesTests(TestCase):
                 form_field = response.context.get('form').fields.get(value)
                 self.assertIsInstance(form_field, expected)
 
-    # дополнительная проверка при создании поста
     def test_special_post_on_three_pages(self):
         """Особый пост доступный на страницах index, profile, group_list."""
         page_names = {
@@ -294,11 +293,6 @@ class PostPagesTests(TestCase):
                         followers_number_before + 1, 
                         followers_number_after
                         )
-        # self.assertTrue(
-        #     Follow.objects.filter(
-        #         author=self.user,
-        #         user=self.user
-        #     ).exists())
 
     def test_profile_stop_follow_authorized(self):
         """Авторизованный пользователь может отписаться от автора"""
@@ -350,6 +344,7 @@ class PostPagesTests(TestCase):
 
 
 class PaginatorTest(TestCase):
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()

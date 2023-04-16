@@ -7,12 +7,8 @@ from django.urls import reverse
 
 from ..models import Group, Post, User, Comment
 from ..forms import PostForm
-# from ..views import POSTS_ON_PAGE
 
 
-# PAGINATOR_ADDITIONAL_PAGES: int = 3
-# POSTS_ON_PAGE_FOR_TEST: int = POSTS_ON_PAGE + PAGINATOR_ADDITIONAL_PAGES
-# ONE_POST: int = 1
 TEST_GIF = (
     b"\x47\x49\x46\x38\x39\x61\x02\x00"
     b"\x01\x00\x80\x00\x00\x00\x00\x00"
@@ -28,6 +24,7 @@ TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 @override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostFormCreateEditTests(TestCase):
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -43,13 +40,6 @@ class PostFormCreateEditTests(TestCase):
             slug='group-slug',
             description='Тестовое описание',
         )
-
-        # for x in range(POSTS_ON_PAGE_FOR_TEST):
-        #     cls.post = Post.objects.create(
-        #         text=f'Пост {x}',
-        #         author=cls.user,
-        #         group=cls.group
-        #     )
 
         cls.form = PostForm()
 
@@ -85,18 +75,6 @@ class PostFormCreateEditTests(TestCase):
         self.assertEqual(post_content['text'], post.text)
         self.assertEqual(post_content['group'], post.group.pk)
         self.assertEqual(post.image, IMG_FOLDER + IMG_NAME)
-        #self.assertEqual(sys.getsizeof(post), IMG_FOLDER + IMG_NAME)
-
-        # self.assertTrue(post_content.exists())
-
-        # self.assertTrue(
-        #     Post.objects.filter(
-        #         text='Новый пост',
-        #         group=self.group.pk,
-        #         # image='posts/test_gif.gif',
-        #         # IMG_FOLDER + uploaded_img.name,
-        #     ).exists()
-        # )
 
         self.assertNotEqual(
             post_count_before,
@@ -140,7 +118,6 @@ class PostFormCreateEditTests(TestCase):
 
         self.assertNotEqual(post_created.text, post_edited.text)
 
-
     def test_add_comment_authorized(self):
         special_post = Post.objects.create(
             text='Пост для комментариев авторизованного пользователя.',
@@ -182,7 +159,6 @@ class PostFormCreateEditTests(TestCase):
         )
         self.assertEqual(comment.post, special_post)
         self.assertEqual(response.context['comments'][0], comment)
-
 
     def test_add_comment_not_authorized(self):
         special_post = Post.objects.create(
