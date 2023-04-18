@@ -9,16 +9,16 @@ from .models import Group, Post, User, Comment, Follow
 POSTS_ON_PAGE: int = 10
 
 
-def paginator(post_list, posts_on_page, request):
-    paginator = Paginator(post_list, posts_on_page)
+def get_page(request, post_list, posts_on_page=POSTS_ON_PAGE):
+    page = Paginator(post_list, posts_on_page)
     page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
+    return page.get_page(page_number)
 
 
 @cache_page(20, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.all().order_by('-pub_date')
-    page_obj = paginator(post_list, POSTS_ON_PAGE, request)
+    page_obj = get_page(request, post_list, POSTS_ON_PAGE)
     context = {
         'page_obj': page_obj,
     }
@@ -28,7 +28,7 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     post_list = group.posts.all().order_by('-pub_date')
-    page_obj = paginator(post_list, POSTS_ON_PAGE, request)
+    page_obj = get_page(request, post_list, POSTS_ON_PAGE)
     context = {
         'group': group,
         'page_obj': page_obj,
@@ -39,7 +39,7 @@ def group_posts(request, slug):
 def profile(request, username):
     user = get_object_or_404(User, username=username)
     post_list = user.posts.all().order_by('-pub_date')
-    page_obj = paginator(post_list, POSTS_ON_PAGE, request)
+    page_obj = get_page(request, post_list, POSTS_ON_PAGE)
     following = (request.user != user
                  and request.user.is_authenticated
                  and Follow.objects.filter(user=request.user, author=user,
@@ -141,7 +141,7 @@ def follow_index(request):
         'group',
     ).filter(author__following__user=request.user)
 
-    page_obj = paginator(post_list, POSTS_ON_PAGE, request)
+    page_obj = get_page(request, post_list, POSTS_ON_PAGE)
 
     context = {
         'page_obj': page_obj,

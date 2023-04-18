@@ -131,7 +131,7 @@ class PostPagesTests(TestCase):
         first_object = response.context['page_obj'][0]
         total_posts_on_page = len(response.context['page_obj'])
 
-        self.assertEqual(total_posts_on_page, 10)
+        self.assertEqual(total_posts_on_page, POSTS_ON_PAGE)
         self.assertIn('page_obj', response.context)
         self.assertEqual(
             first_object.group.title,
