@@ -49,10 +49,14 @@ class PostURLTests(TestCase):
             'posts/profile.html': '/profile/auth/',
             'posts/post_detail.html': '/posts/42/',
             'posts/create_post.html': '/create/',
-            '/posts/42/edit/': 'posts/create_post.html',
             'posts/index.html': '/',
             'core/404.html': '/unexisted_page/',
         }
+
+        cls.templates_url_names_for_edit = {
+            'posts/create_post.html': '/posts/42/edit/',
+        }
+                    
 
     @classmethod
     def setUp(self) -> None:
@@ -75,6 +79,11 @@ class PostURLTests(TestCase):
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         for template, address in self.templates_url_names.items():
+            with self.subTest(address=address):
+                response = self.auth_client.get(address)
+                self.assertTemplateUsed(response, template)
+
+        for template, address in self.templates_url_names_for_edit.items():
             with self.subTest(address=address):
                 response = self.auth_client.get(address)
                 self.assertTemplateUsed(response, template)
