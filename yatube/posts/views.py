@@ -137,12 +137,12 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     """Подписки пользователя"""
-    post_list = Post.objects.select_related(
+    posts = Post.objects.select_related(
         'author',
         'group',
     ).filter(author__following__user=request.user)
 
-    page_obj = get_page(request, post_list, POSTS_ON_PAGE)
+    page_obj = get_page(request, posts, POSTS_ON_PAGE)
 
     context = {
         'page_obj': page_obj,

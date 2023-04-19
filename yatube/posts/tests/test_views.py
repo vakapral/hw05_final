@@ -440,20 +440,18 @@ class FollowingTests(TestCase):
 
     def test_profile_follow_authorized(self):
         """Авторизованный пользователь может подписаться на автора"""
-        followers_number_before = Follow.objects.count()
-
         self.auth_client.get(
             reverse(
                 "posts:profile_follow", args=[self.user_author.username]
             )
         )
 
-        followers_number_after = Follow.objects.count()
+        follower_number = Follow.objects.filter(
+                                                user=self.user,
+                                                author=self.user_author,
+                                               ).count()
 
-        self.assertEqual(
-            followers_number_before + 1,
-            followers_number_after
-        )
+        self.assertEqual(follower_number, 1)
 
     def test_profile_stop_follow_authorized(self):
         """Авторизованный пользователь может отписаться от автора"""
