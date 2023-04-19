@@ -456,7 +456,6 @@ class FollowingTests(TestCase):
     def test_profile_stop_follow_authorized(self):
         """Авторизованный пользователь может отписаться от автора"""
         Follow.objects.create(author=self.user_author, user=self.user)
-        followers_number_before = Follow.objects.count()
 
         self.auth_client.get(
             reverse(
@@ -464,12 +463,12 @@ class FollowingTests(TestCase):
             )
         )
 
-        followers_number_after = Follow.objects.count()
+        follower_number = Follow.objects.filter(
+                                                user=self.user,
+                                                author=self.user_author,
+                                               ).count()
 
-        self.assertEqual(
-            followers_number_after,
-            followers_number_before - 1
-        )
+        self.assertEqual(follower_number, 0)
         self.assertFalse(
             Follow.objects.filter(
                 author=self.user_author,
@@ -499,3 +498,18 @@ class FollowingTests(TestCase):
         )
 
         self.assertFalse(len(response.context['page_obj']), 0)
+
+    def test_auth_user_cant_self_follow(self):
+        """Авторизованный пользователь не может подписаться сам на себя"""
+        self.auth_client.get(
+            reverse(
+                "posts:profile_follow", args=[self.user.username]
+            )
+        )
+
+        follower_number = Follow.objects.filter(
+                                                user=self.user,
+                                                author=self.user,
+                                               ).count()
+
+        self.assertEqual(follower_number, 0)
