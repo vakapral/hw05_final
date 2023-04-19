@@ -26,7 +26,6 @@ TEST_GIF = (
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
-@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostPagesTests(TestCase):
 
     @classmethod
@@ -38,10 +37,6 @@ class PostPagesTests(TestCase):
         cls.user = User.objects.create_user(username='auth')
         cls.auth_client = Client()
         cls.auth_client.force_login(cls.user)
-
-        cls.user_who_not_follows = User.objects.create(username='not-follower')
-        cls.auth_client_who_not_follows = Client()
-        cls.auth_client_who_not_follows.force_login(cls.user_who_not_follows)
 
         cls.group = Group.objects.create(
             title='Тестовая группа',
@@ -98,11 +93,6 @@ class PostPagesTests(TestCase):
     @classmethod
     def setUp(self) -> None:
         cache.clear()
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -263,85 +253,6 @@ class PostPagesTests(TestCase):
         self.assertNotEqual(usual_object, self.special_post)
         self.assertNotEqual(usual_object.group.slug, self.special_group.slug)
 
-    def test_cache_on_main_page(self):
-        """Тестирование кэша"""
-        content_cache = self.guest_client.get(reverse("posts:index")).content
-        Post.objects.all().delete()
-        content_before = self.guest_client.get(reverse("posts:index")).content
-
-        self.assertEqual(content_cache, content_before)
-
-        cache.clear()
-        content_after = self.guest_client.get(reverse("posts:index")).content
-
-        self.assertNotEqual(content_cache, content_after)
-
-    def test_profile_follow_authorized(self):
-        """Авторизованный пользователь может подписаться на автора"""
-        followers_number_before = Follow.objects.count()
-
-        Follow.objects.create(author=self.user, user=self.user)
-        self.auth_client.get(
-            reverse(
-                "posts:profile_follow", args=[self.user.username]
-            )
-        )
-
-        followers_number_after = Follow.objects.count()
-
-        self.assertEqual(
-            followers_number_before + 1,
-            followers_number_after
-        )
-
-    def test_profile_stop_follow_authorized(self):
-        """Авторизованный пользователь может отписаться от автора"""
-        Follow.objects.create(author=self.user, user=self.user)
-        followers_number_before = Follow.objects.count()
-
-        self.auth_client.get(
-            reverse(
-                "posts:profile_unfollow", args=[self.user.username]
-            )
-        )
-
-        followers_number_after = Follow.objects.count()
-
-        self.assertEqual(
-            followers_number_after,
-            followers_number_before - 1
-        )
-        self.assertFalse(
-            Follow.objects.filter(
-                author=self.user,
-                user=self.user
-            ).exists())
-
-    def test_new_post_appears_for_follower(self):
-        """Новые посты автора показываются на странице подписок"""
-        Follow.objects.create(author=self.user, user=self.user)
-        created_post = Post.objects.create(
-            text='Пост для подписки.',
-            author=self.user,
-            group=self.group
-        )
-        response = self.auth_client.get(reverse("posts:follow_index"))
-
-        self.assertEqual(created_post, response.context['page_obj'][0])
-
-    def test_new_post_not_appear_for_non_follower(self):
-        """Новые посты автора не показываются на странице подписок"""
-        Post.objects.create(
-            text='Пост для подписки.',
-            author=self.user,
-            group=self.group
-        )
-        response = self.auth_client_who_not_follows.get(
-            reverse("posts:follow_index")
-        )
-
-        self.assertFalse(len(response.context['page_obj']), 0)
-
 
 class PaginatorTest(TestCase):
 
@@ -400,3 +311,193 @@ class PaginatorTest(TestCase):
                 total_posts_on_page = len(response.context['page_obj'])
 
                 self.assertEqual(total_posts_on_page, expected_posts)
+
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
+class CachedPostPagesTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.guest_client = Client()
+
+        cls.user = User.objects.create_user(username='auth')
+        cls.auth_client = Client()
+        cls.auth_client.force_login(cls.user)
+
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            description='Тестовое описание',
+            slug='group-slug',
+        )
+
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый текст',
+            id=42,
+            image=SimpleUploadedFile(
+                name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
+            ),
+        )
+
+        for x in range(42):
+            cls.post = Post.objects.create(
+                text=f'Пост {x}',
+                author=cls.user,
+                group=cls.group,
+            )
+
+    @classmethod
+    def setUp(self) -> None:
+        cache.clear()
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
+
+    def test_cache_on_main_page(self):
+        """Тестирование кэша"""
+        cached_page = self.guest_client.get(reverse("posts:index")).content
+        Post.objects.all().delete()
+        still_cached_page = (
+            self.guest_client.get(reverse("posts:index")).content
+        )
+
+        self.assertEqual(cached_page, still_cached_page)
+
+        cache.clear()
+        non_cached_page = self.guest_client.get(reverse("posts:index")).content
+
+        self.assertNotEqual(cached_page, non_cached_page)
+
+
+class FollowingTests(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.guest_client = Client()
+
+        cls.user = User.objects.create_user(username='auth')
+        cls.auth_client = Client()
+        cls.auth_client.force_login(cls.user)
+
+        cls.user_not_follower = User.objects.create(username='not-follower')
+        cls.auth_client_not_follower = Client()
+        cls.auth_client_not_follower.force_login(cls.user_not_follower)
+
+        cls.user_author = User.objects.create(username='author')
+        cls.auth_client_author = Client()
+        cls.auth_client_author.force_login(cls.user_author)
+
+        cls.group = Group.objects.create(
+            title='Тестовая группа',
+            description='Тестовое описание',
+            slug='group-slug',
+        )
+
+        cls.post = Post.objects.create(
+            author=cls.user,
+            text='Тестовый текст',
+            id=42,
+            image=SimpleUploadedFile(
+                name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
+            ),
+        )
+
+        for x in range(42):
+            cls.post = Post.objects.create(
+                text=f'Пост {x}',
+                author=cls.user,
+                group=cls.group,
+            )
+
+        cls.special_group = Group.objects.create(
+            title='Необычная группа',
+            slug='special-group-slug',
+            description='Необычное описание',
+        )
+
+        cls.special_post = Post.objects.create(
+            text='Необычный пост',
+            author=cls.user,
+            id=420,
+            group=cls.special_group
+        )
+
+        cls.post_for_follower = Post.objects.create(
+            text='Пост для подписки.',
+            author=cls.user_author,
+            group=cls.group
+        )
+
+    @classmethod
+    def setUp(self) -> None:
+        cache.clear()
+
+    def test_profile_follow_authorized(self):
+        """Авторизованный пользователь может подписаться на автора"""
+        followers_number_before = Follow.objects.count()
+
+        self.auth_client.get(
+            reverse(
+                "posts:profile_follow", args=[self.user_author.username]
+            )
+        )
+
+        followers_number_after = Follow.objects.count()
+
+        self.assertEqual(
+            followers_number_before + 1,
+            followers_number_after
+        )
+
+    def test_profile_stop_follow_authorized(self):
+        """Авторизованный пользователь может отписаться от автора"""
+        Follow.objects.create(author=self.user_author, user=self.user)
+        followers_number_before = Follow.objects.count()
+
+        self.auth_client.get(
+            reverse(
+                "posts:profile_unfollow", args=[self.user_author.username]
+            )
+        )
+
+        followers_number_after = Follow.objects.count()
+
+        self.assertEqual(
+            followers_number_after,
+            followers_number_before - 1
+        )
+        self.assertFalse(
+            Follow.objects.filter(
+                author=self.user_author,
+                user=self.user
+            ).exists())
+
+    def test_new_post_appears_for_follower(self):
+        """Новые посты автора показываются на странице подписок"""
+        Follow.objects.create(author=self.user_author, user=self.user)
+
+        response = self.auth_client.get(reverse("posts:follow_index"))
+
+        self.assertEqual(
+            self.post_for_follower,
+            response.context['page_obj'][0]
+        )
+
+    def test_new_post_not_appear_for_non_follower(self):
+        """Новые посты автора не показываются на странице подписок"""
+        Post.objects.create(
+            text='Пост для подписки.',
+            author=self.user,
+            group=self.group
+        )
+        response = self.auth_client_not_follower.get(
+            reverse("posts:follow_index")
+        )
+
+        self.assertFalse(len(response.context['page_obj']), 0)
