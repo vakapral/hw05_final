@@ -56,7 +56,6 @@ class PostURLTests(TestCase):
         cls.templates_url_names_for_edit = {
             'posts/create_post.html': '/posts/42/edit/',
         }
-                    
 
     @classmethod
     def setUp(self) -> None:

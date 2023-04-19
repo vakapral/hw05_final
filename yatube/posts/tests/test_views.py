@@ -464,9 +464,9 @@ class FollowingTests(TestCase):
         )
 
         follower_number = Follow.objects.filter(
-                                               user=self.user,
-                                               author=self.user_author,
-                                               ).count()
+            user=self.user,
+            author=self.user_author,
+        ).count()
 
         self.assertEqual(follower_number, 0)
         self.assertFalse(
