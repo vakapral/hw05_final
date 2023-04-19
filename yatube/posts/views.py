@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import cache_page
 
 from .forms import PostForm, CommentForm
-from .models import Group, Post, User, Comment, Follow
+from .models import Group, Post, User, Follow
 
 POSTS_ON_PAGE: int = 10
 
@@ -44,9 +44,9 @@ def profile(request, username):
         request.user != user
         and request.user.is_authenticated
         and Follow.objects.filter(
-                user=request.user,
-                author=user,
-            ).exists()
+                                  user=request.user,
+                                  author=user,
+                                 ).exists()
     )
     context = {
         'author': user,

@@ -49,7 +49,7 @@ class PostURLTests(TestCase):
             'posts/profile.html': '/profile/auth/',
             'posts/post_detail.html': '/posts/42/',
             'posts/create_post.html': '/create/',
-            'posts/create_post.html': '/posts/42/edit/',
+            '/posts/42/edit/': 'posts/create_post.html',
             'posts/index.html': '/',
             'core/404.html': '/unexisted_page/',
         }

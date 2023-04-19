@@ -447,8 +447,8 @@ class FollowingTests(TestCase):
         )
 
         follower_number = Follow.objects.filter(
-                                                user=self.user,
-                                                author=self.user_author,
+                                               user=self.user,
+                                               author=self.user_author,
                                                ).count()
 
         self.assertEqual(follower_number, 1)
@@ -464,8 +464,8 @@ class FollowingTests(TestCase):
         )
 
         follower_number = Follow.objects.filter(
-                                                user=self.user,
-                                                author=self.user_author,
+                                               user=self.user,
+                                               author=self.user_author,
                                                ).count()
 
         self.assertEqual(follower_number, 0)
@@ -508,8 +508,8 @@ class FollowingTests(TestCase):
         )
 
         follower_number = Follow.objects.filter(
-                                                user=self.user,
-                                                author=self.user,
+                                               user=self.user,
+                                               author=self.user,
                                                ).count()
 
         self.assertEqual(follower_number, 0)
