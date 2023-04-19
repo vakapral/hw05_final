@@ -40,11 +40,14 @@ def profile(request, username):
     user = get_object_or_404(User, username=username)
     posts = user.posts.all()
     page_obj = get_page(request, posts, POSTS_ON_PAGE)
-    following = (request.user != user
-                 and request.user.is_authenticated
-                 and Follow.objects.filter(user=request.user, author=user,
-                                           ).exists()
-                 )
+    following = (
+        request.user != user
+        and request.user.is_authenticated
+        and Follow.objects.filter(
+                user=request.user,
+                author=user,
+            ).exists()
+    )
     context = {
         'author': user,
         'page_obj': page_obj,
@@ -55,11 +58,9 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    author = post.author
-    post_count = author.posts.count
-    #Post.objects
+    post_count = Post.objects.filter(author=post.author).count()
     form = CommentForm(request.POST or None)
-    comments = Comment.objects.select_related('author').filter(post=post)
+    comments = post.comments.all()
     context = {
         'post': post,
         'post_count': post_count,
