@@ -15,6 +15,8 @@ from ..views import POSTS_ON_PAGE
 
 PAGINATOR_ADDITIONAL_PAGES: int = 3
 POSTS_ON_PAGE_FOR_TEST: int = POSTS_ON_PAGE + PAGINATOR_ADDITIONAL_PAGES
+SPECIAL_POST_ID: int = 2100
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 TEST_GIF = (
     b"\x47\x49\x46\x38\x39\x61\x02\x00"
     b"\x01\x00\x80\x00\x00\x00\x00\x00"
@@ -23,7 +25,6 @@ TEST_GIF = (
     b"\x02\x00\x01\x00\x00\x02\x02\x0C"
     b"\x0A\x00\x3B"
 )
-TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
 class PostPagesTests(TestCase):
@@ -47,13 +48,12 @@ class PostPagesTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовый текст',
-            id=42,
             image=SimpleUploadedFile(
                 name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
             ),
         )
 
-        for x in range(42):
+        for x in range(POSTS_ON_PAGE_FOR_TEST):
             cls.post = Post.objects.create(
                 text=f'Пост {x}',
                 author=cls.user,
@@ -69,7 +69,7 @@ class PostPagesTests(TestCase):
         cls.special_post = Post.objects.create(
             text='Необычный пост',
             author=cls.user,
-            id=420,
+            id=SPECIAL_POST_ID,
             group=cls.special_group
         )
 
@@ -85,7 +85,7 @@ class PostPagesTests(TestCase):
             ),
             'posts/post_detail.html': reverse(
                 'posts:post_detail',
-                kwargs={'post_id': 42},
+                kwargs={'post_id': POSTS_ON_PAGE_FOR_TEST},
             ),
             'posts/create_post.html': reverse('posts:post_create'),
         }
@@ -335,13 +335,12 @@ class CachedPostPagesTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовый текст',
-            id=42,
             image=SimpleUploadedFile(
                 name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
             ),
         )
 
-        for x in range(42):
+        for x in range(POSTS_ON_PAGE_FOR_TEST):
             cls.post = Post.objects.create(
                 text=f'Пост {x}',
                 author=cls.user,
@@ -402,13 +401,12 @@ class FollowingTests(TestCase):
         cls.post = Post.objects.create(
             author=cls.user,
             text='Тестовый текст',
-            id=42,
             image=SimpleUploadedFile(
                 name="test_gif.gif", content=TEST_GIF, content_type="image/gif"
             ),
         )
 
-        for x in range(42):
+        for x in range(11):
             cls.post = Post.objects.create(
                 text=f'Пост {x}',
                 author=cls.user,
@@ -424,7 +422,7 @@ class FollowingTests(TestCase):
         cls.special_post = Post.objects.create(
             text='Необычный пост',
             author=cls.user,
-            id=420,
+            id=SPECIAL_POST_ID,
             group=cls.special_group
         )
 
@@ -446,12 +444,12 @@ class FollowingTests(TestCase):
             )
         )
 
-        follower_number = Follow.objects.filter(
-            user=self.user,
-            author=self.user_author,
-        ).count()
-
-        self.assertEqual(follower_number, 1)
+        self.assertTrue(
+            Follow.objects.filter(
+                user=self.user,
+                author=self.user_author,
+            ).exists()
+        )
 
     def test_profile_stop_follow_authorized(self):
         """Авторизованный пользователь может отписаться от автора"""
